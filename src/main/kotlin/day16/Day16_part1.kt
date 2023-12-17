@@ -6,9 +6,9 @@ import Size
 import readInput
 
 fun main() {
-    val maze = readInput("day_16_example").map(String::toCharArray)
+    val maze = readInput("day_16").map(String::toCharArray)
 
-    fun Direction.passThroughLens(mirror: Char): List<Direction> {
+    fun Direction.passThrough(mirror: Char): List<Direction> {
         return when (mirror) {
             '/' -> listOf(
                 when (this) {
@@ -46,30 +46,42 @@ fun main() {
         }
     }
 
-    val beamPaths = maze.map { line ->
-        MutableList(line.size) { '.' to emptyList<Direction>().toMutableList() }
+    val beams = mutableListOf(Direction.EAST to Point(-1, 0))
+    val mazeSize = Size(maze.first().size, maze.size)
+
+    // For every coordinate, we need to keep a list of directions that a beam passes through it
+    val tileBeams = maze.map { line ->
+        List(line.size) { emptyList<Direction>().toMutableList() }
     }
 
-    val beams = mutableListOf(Direction.EAST to Point(0, 0))
-    val mazeSize = Size(maze.first().size, maze.size)
+    val tiles = maze.map { line ->
+        MutableList(line.size) { '.' }
+    }
+
     while (beams.isNotEmpty()) {
         val newBeamDirections = mutableListOf<Pair<Direction, Point>>()
         for (beam in beams) {
+            // Let every beam take 1 step
             val (direction, coords) = beam
             // Move the beam if possible
             if (coords.moveWithinGrid(direction, mazeSize)) {
                 // Beam was moved to a new coordinate, process it's character
                 val mazeChar = maze[coords.y][coords.x]
-                val newDirections = direction.passThroughLens(mazeChar)
-                newBeamDirections.addAll(newDirections.map { it to coords.copy() })
+                val newDirections = direction.passThrough(mazeChar)
+
+                if(!tileBeams[coords.y][coords.x].containsAll(newDirections)) {
+                    tileBeams[coords.y][coords.x].addAll(newDirections)
+                    newBeamDirections.addAll(newDirections.map { it to coords.copy() })
+                }
             }
 
-            val currentTileValue =  tiles[beam.second.y][beam.second.x]
             tiles[beam.second.y][beam.second.x] = '#'
         }
         beams.clear()
         beams.addAll(newBeamDirections)
     }
 
-    tiles.forEach(::println)
+    val energisedTiles = tiles.sumOf { line -> line.count { it == '#' } }
+//    tiles.map{it.joinToString("")}.forEach(::println)
+    println("Energised tiles: $energisedTiles")
 }
