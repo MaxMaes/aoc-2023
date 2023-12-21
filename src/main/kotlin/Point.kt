@@ -17,7 +17,8 @@ data class Point(var x: Int, var y: Int) {
         return true
     }
 
-    operator fun plus(other: Point): Point {
-        return Point(this.x + other.x, this.y + other.y)
-    }
+    operator fun plus(other: Point): Point = Point(this.x + other.x, this.y + other.y)
+    operator fun times(other: Int): Point = Point(this.x * other, this.y * other)
+    operator fun times(other: Point): Point = Point(this.x * other.x, this.y * other.y)
+
 }
