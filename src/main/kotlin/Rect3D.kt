@@ -11,6 +11,12 @@ class Rect3D(startField: Point3D, endField: Point3D) {
     val front get() = minOf(start.y, end.y)
     val back get() = maxOf(start.y, end.y)
 
+    override fun equals(other: Any?): Boolean {
+        if (other !is Rect3D) {
+            return false
+        }
+        return start == other.start && end == other.end
+    }
     override fun toString(): String {
         return "Rect3D(start=$start, end=$end)"
     }
@@ -33,10 +39,27 @@ class Rect3D(startField: Point3D, endField: Point3D) {
     /**
      * Returns a list of all Rect3D shapes that are directly supported by shape
      */
-    fun supports(stack: List<Rect3D>): List<Rect3D> {
+    fun supportsDirectly(stack: List<Rect3D>): List<Rect3D> {
         val point = Direction3D.UP.toPoint3D()
         val movedRect = Rect3D(start + point, end + point)
-        return stack.filter { it.intersects(movedRect) }
+        return stack.filter { this != it && it.intersects(movedRect) }
+    }
+
+    /**
+     * Returns a list of all Rect3D shapes that are supported by this shape
+     */
+    fun supports(stack: List<Rect3D>): List<Rect3D> {
+        val supported = mutableListOf<Rect3D>()
+        var current = this
+        while (true) {
+            val supportedDirectly = current.supportsDirectly(stack)
+            if (supportedDirectly.isEmpty()) {
+                break
+            }
+            supported.addAll(supportedDirectly)
+            current = supportedDirectly.first()
+        }
+        return supported
     }
 
     fun touchesInStack(direction: Direction3D, stack: List<Rect3D>): Boolean {

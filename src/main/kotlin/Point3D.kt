@@ -1,4 +1,11 @@
 data class Point3D(var x: Int, var y: Int, var z: Int) {
+    override fun equals(other: Any?): Boolean {
+        if (other !is Point3D) {
+            return false
+        }
+        return x == other.x && y == other.y && z == other.z
+    }
+
     fun move(direction: Direction3D): Point3D {
         val point = direction.toPoint3D()
         return this + point

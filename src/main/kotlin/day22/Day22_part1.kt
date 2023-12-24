@@ -27,7 +27,7 @@ fun main() {
     // Calculate which bricks are supported by which other bricks
     val supports = input.map { brick ->
         val otherBricks = input.filter { it != brick }
-        val supportedBy = brick.supports(otherBricks)
+        val supportedBy = brick.supportsDirectly(otherBricks)
         supportedBy
     }
 
