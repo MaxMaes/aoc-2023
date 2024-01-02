@@ -12,7 +12,7 @@ fun main() {
     //. is ground; there is no pipe in this tile.
     //S is the starting position of the animal; there is a pipe on this tile, but your sketch doesn't show what shape the pipe has.
 
-    val maze = readInput("day_10").map { it.toCharArray().toList() }
+    val maze = readInput("day_10_example2").map { it.toCharArray().toList() }
     // Maze is a 2D grid of pipe characters
 
     // Find the starting position
@@ -123,42 +123,63 @@ fun main() {
         }
     }
 
-
     // Now that we've got the loop, we can find all coordinates which are fully enclosed by the loop
     // Iterate through all the coordinates in the maze, and check if they can reach the outside of the grid
-    val coordinates = maze.mapIndexed { y, row ->
-        List(row.size) { x ->
-            x to y
-        }
-    }.flatten().filter { coordinate -> coordinate !in loop }.filter { coordinate ->
-        println(coordinate)
-        val visited = mutableSetOf<Pair<Int, Int>>()
-        val queue = mutableListOf(coordinate)
-        while (queue.isNotEmpty()) {
-            // Check all the neighbours of the current coordinate
-            val current = queue.removeFirst()
-            visited.add(current)
-            val (x, y) = current
-            val neighbours = listOf(x to y - 1, x + 1 to y, x to y + 1, x - 1 to y)
-
-            if (neighbours.any { (x, y) -> x < 0 || y < 0 || x >= maze[0].size || y >= maze.size }) {
-                // A neighboor of this coordinate reaches out of the grid, we can escape!
-                return@filter false
+    val hashedMaze = maze.mapIndexed { y, row ->
+        MutableList(row.size) { x ->
+            if (y to x in loop) {
+                '.'
+            } else {
+                '#'
             }
-
-            val validNeighbours = neighbours.filter { neighbour ->
-                neighbour !in loop && neighbour !in visited
-            }
-            queue.addAll(validNeighbours)
         }
-        // If the queue is empty, then we've visited all the coordinates we can reach
-        // If the queue is not empty, then we've found a coordinate which can reach the outside of the grid
-        println("Found enclosed coordinate: $coordinate")
-        true
+    }.toMutableList()
+
+
+    for (row in hashedMaze) {
+        println(row.joinToString(""))
     }
 
-    println(coordinates.size)
+    // Add one row and column of '.' around the outside of the grid
+    hashedMaze.add(0, MutableList(hashedMaze[0].size) { '.' })
+    hashedMaze.add(MutableList(hashedMaze[0].size) { '.' })
+    hashedMaze.forEach { row ->
+        row.add(0, '.')
+        row.add('.')
+    }
 
-    println("Loop size: ${loop.size}")
-    println("Answer: ${loop.size / 2}")
+    // Fill the outside of the grid with $ characters
+    val startingPoint = 0 to 0
+    val (y, x) = startingPoint
+    val offsets = listOf(
+        0 to -1,
+        0 to 1,
+        -1 to 0,
+        1 to 0
+    )
+
+
+    hashedMaze[y][x] = '$'
+    val queue = mutableListOf(startingPoint)
+    while (queue.isNotEmpty()) {
+        val currentPoint = queue.removeFirst()
+        offsets.forEach { offset ->
+            val newPoint = currentPoint.first + offset.first to currentPoint.second + offset.second
+            val (newy, newx) = newPoint
+            if (newx >= 0 && newy >= 0 && newx < hashedMaze[0].size && newy < hashedMaze.size) {
+                if (hashedMaze[newy][newx] == '.') {
+                    hashedMaze[newy][newx] = '$'
+                    queue.add(newPoint)
+                }
+            }
+        }
+    }
+
+    println("\n")
+    for (row in hashedMaze) {
+        println(row.joinToString(""))
+    }
+
+
+    println("Answer: ${hashedMaze.flatten().count { it == '.' }}")
 }
